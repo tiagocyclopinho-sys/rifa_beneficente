@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Rifa Beneficente</title>
+  <meta name="description" content="Escolha seus números e ajude uma boa causa.">
+  <meta name="theme-color" content="#0f7a5c">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <h1 id="titulo">Rifa Beneficente</h1>
+    <p id="descricao"></p>
+    <div class="premio" id="premio" hidden></div>
+    <div class="meta">
+      <span>🎟️ <b id="valorCota">—</b> por número</span>
+      <span id="dataSorteioBox" hidden>📅 Sorteio: <b id="dataSorteio"></b></span>
+      <span>🍀 Pela Loteria Federal</span>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <section class="card lift result hidden" id="resultado"></section>
+
+  <section class="card lift" id="progresso">
+    <div class="progress-head">
+      <strong><span id="vendidos">0</span> de <span id="total">500</span> números vendidos</strong>
+      <span class="small" id="pct">0%</span>
+    </div>
+    <div class="bar"><span id="barFill" style="width:0%"></span><i class="goal" id="barGoal"></i></div>
+    <p class="small" id="metaTxt" style="margin:22px 0 0"></p>
+  </section>
+
+  <div id="avisoEncerrado" class="alert warn hidden"></div>
+
+  <section class="card">
+    <div class="toolbar">
+      <button class="chip on" data-filtro="todos">Todos</button>
+      <button class="chip" data-filtro="livres">Só livres</button>
+      <input type="number" id="busca" placeholder="Ir para nº" min="1" inputmode="numeric" aria-label="Ir para número">
+      <button class="chip" id="btnSurpresa" title="Escolhe números livres ao acaso">🎲 Surpresinha</button>
+      <span style="flex:1"></span>
+      <button class="chip" id="btnMeus">🔎 Meus números</button>
+    </div>
+    <div class="legend">
+      <span><i style="background:var(--livre)"></i>Livre</span>
+      <span><i style="background:var(--sel)"></i>Selecionado</span>
+      <span><i style="background:var(--reservado)"></i>Reservado</span>
+      <span><i style="background:var(--pago)"></i>Vendido</span>
+    </div>
+    <div class="grid" id="grid" aria-label="Números da rifa"></div>
+    <p class="small" id="atualizado" style="margin-top:12px"></p>
+  </section>
+
+  <section class="card">
+    <details>
+      <summary>📜 Regulamento e como funciona o sorteio</summary>
+      <ol id="regulamento"></ol>
+    </details>
+  </section>
+</main>
+
+<footer class="small">Rifa beneficente · Todo valor arrecadado é destinado à causa.</footer>
+
+<!-- Barra do carrinho -->
+<div class="cartbar" id="cartbar">
+  <div class="wrap">
+    <div class="info">
+      <b><span id="cartQtd">0</span> número(s) · <span id="cartTotal">R$ 0,00</span></b>
+      <div class="small" id="cartNums"></div>
+    </div>
+    <div style="display:flex;gap:6px">
+      <button class="btn ghost" id="btnLimpar">Limpar</button>
+      <button class="btn" id="btnContinuar">Continuar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: dados + Pix -->
+<div class="modal" id="mCompra" role="dialog" aria-modal="true">
+  <div class="box">
+    <button class="close" data-fechar>&times;</button>
+
+    <div id="passoDados">
+      <h2>Seus dados</h2>
+      <p class="small">Números: <b id="resumoNums"></b><br>Total: <b id="resumoValor"></b></p>
+      <form id="fDados">
+        <label for="nome">Nome completo</label>
+        <input id="nome" required minlength="3" autocomplete="name">
+        <label for="whats">WhatsApp (com DDD)</label>
+        <input id="whats" required inputmode="tel" autocomplete="tel" placeholder="(11) 98888-7777">
+        <p class="small">Usamos seu WhatsApp para confirmar o pagamento e avisar se você ganhar.</p>
+        <div id="errDados" class="alert err hidden"></div>
+        <button class="btn block" id="btnReservar" type="submit">Reservar e gerar Pix</button>
+      </form>
+    </div>
+
+    <div id="passoPix" class="hidden">
+      <h2>Pague com Pix</h2>
+      <p class="small">Pedido <b id="pixCodigo"></b> · Números <b id="pixNums"></b></p>
+      <p style="margin:6px 0 0;font-size:1.4rem;font-weight:800;text-align:center" id="pixValor"></p>
+      <div class="timer" id="pixTimer"></div>
+      <div class="pix-qr" id="pixQr"></div>
+      <label for="pixCopia">Pix Copia e Cola</label>
+      <div class="copy">
+        <input id="pixCopia" readonly>
+        <button class="btn sm" id="btnCopiar" type="button">Copiar</button>
+      </div>
+      <p class="small" style="margin-top:6px">Recebedor: <b id="pixNome"></b></p>
+      <ol class="steps small">
+        <li>Abra o app do seu banco e pague pelo QR Code ou Copia e Cola.</li>
+        <li>Toque em <b>Já paguei</b> e envie o comprovante pelo WhatsApp.</li>
+        <li>Assim que conferirmos, seus números ficam como <b>vendidos</b> no site.</li>
+      </ol>
+      <div id="errPix" class="alert err hidden"></div>
+      <button class="btn block" id="btnPaguei" type="button">✅ Já paguei — enviar comprovante</button>
+    </div>
+
+    <div id="passoFim" class="hidden">
+      <h2>Obrigado! 💚</h2>
+      <p>Recebemos seu aviso de pagamento do pedido <b id="fimCodigo"></b>.</p>
+      <p class="small">Seus números ficam reservados até a conferência. Se o WhatsApp não abriu, envie o comprovante para
+        <a id="fimWa" target="_blank" rel="noopener"></a> informando o código do pedido.</p>
+      <button class="btn block" data-fechar>Fechar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: meus números -->
+<div class="modal" id="mMeus" role="dialog" aria-modal="true">
+  <div class="box">
+    <button class="close" data-fechar>&times;</button>
+    <h2>Meus números</h2>
+    <form id="fMeus" class="copy" style="margin-top:10px">
+      <input id="meusWhats" inputmode="tel" placeholder="Seu WhatsApp com DDD" required>
+      <button class="btn" type="submit">Buscar</button>
+    </form>
+    <div id="meusRes" style="margin-top:12px"></div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="js/config.js"></script>
+<script src="js/comum.js"></script>
+<script src="js/pix.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Painel da Rifa</title>
+  <meta name="robots" content="noindex">
+  <meta name="theme-color" content="#0f7a5c">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<!-- Login -->
+<main class="wrap" id="telaLogin" style="max-width:420px;padding-top:60px">
+  <div class="card">
+    <h2 style="margin-top:0">🔐 Painel da Rifa</h2>
+    <form id="fLogin">
+      <label for="email">E-mail</label>
+      <input id="email" type="email" required autocomplete="username">
+      <label for="senha">Senha</label>
+      <input id="senha" type="password" required autocomplete="current-password">
+      <div id="errLogin" class="alert err hidden"></div>
+      <button class="btn block" style="margin-top:14px" type="submit">Entrar</button>
+    </form>
+  </div>
+</main>
+
+<!-- Painel -->
+<div id="telaPainel" class="hidden">
+  <header class="hero" style="padding-bottom:20px">
+    <div class="wrap" style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+      <div>
+        <h1 id="aTitulo" style="font-size:1.4rem">Painel da Rifa</h1>
+        <p class="small" style="color:#fff;opacity:.85" id="aAtualizado"></p>
+      </div>
+      <div style="display:flex;gap:8px">
+        <a class="btn ghost" style="color:#fff;border-color:#fff;text-decoration:none" href="index.html" target="_blank">Ver site</a>
+        <button class="btn ghost" style="color:#fff;border-color:#fff" id="btnAtualizar">↻</button>
+        <button class="btn ghost" style="color:#fff;border-color:#fff" id="btnSair">Sair</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <nav class="tabs">
+      <button data-tab="tGeral" class="on">Visão geral</button>
+      <button data-tab="tPedidos">Pedidos <span class="badge informado" id="badgeConferir" hidden></span></button>
+      <button data-tab="tManual">Venda manual</button>
+      <button data-tab="tSorteio">Sorteio</button>
+      <button data-tab="tConfig">Configurações</button>
+    </nav>
+
+    <!-- VISÃO GERAL -->
+    <section id="tGeral">
+      <div class="kpis" id="kpis"></div>
+      <div class="card">
+        <div class="progress-head">
+          <strong>Meta para liberar o sorteio</strong>
+          <span class="small" id="gMetaTxt"></span>
+        </div>
+        <div class="bar"><span id="gBar" style="width:0%"></span><i class="goal" id="gGoal"></i></div>
+      </div>
+      <div id="gConferir"></div>
+      <div class="card mini">
+        <div class="legend">
+          <span><i style="background:var(--livre)"></i>Livre</span>
+          <span><i style="background:var(--reservado)"></i>Reservado / em conferência</span>
+          <span><i style="background:var(--sel)"></i>Pago</span>
+        </div>
+        <div class="grid" id="gMapa"></div>
+      </div>
+    </section>
+
+    <!-- PEDIDOS -->
+    <section id="tPedidos" class="hidden">
+      <div class="toolbar">
+        <select id="pStatus" style="width:auto">
+          <option value="abertos">Em aberto (conferir + pendentes)</option>
+          <option value="informado">Aguardando conferência</option>
+          <option value="pendente">Aguardando pagamento</option>
+          <option value="pago">Pagos</option>
+          <option value="cancelado,expirado">Cancelados / expirados</option>
+          <option value="">Todos</option>
+        </select>
+        <input type="search" id="pBusca" placeholder="Nome, código, WhatsApp ou nº" style="flex:1;min-width:180px;width:auto">
+        <button class="btn ghost sm" id="btnCsv">⬇ Exportar planilha</button>
+      </div>
+      <div class="card table-wrap" style="padding:6px">
+        <table>
+          <thead><tr><th>Pedido</th><th>Comprador</th><th>Números</th><th>Valor</th><th>Status</th><th></th></tr></thead>
+          <tbody id="pLinhas"></tbody>
+        </table>
+        <p class="small" id="pVazio" style="padding:12px" hidden>Nenhum pedido neste filtro.</p>
+      </div>
+    </section>
+
+    <!-- VENDA MANUAL -->
+    <section id="tManual" class="hidden">
+      <div class="card" style="max-width:560px">
+        <h3 style="margin-top:0">Lançar venda manual</h3>
+        <p class="small">Para quem pagou em dinheiro ou fez Pix sem usar o site. Já entra como <b>paga</b>.</p>
+        <form id="fManual">
+          <label for="mNome">Nome</label>
+          <input id="mNome" required>
+          <label for="mWhats">WhatsApp</label>
+          <input id="mWhats" inputmode="tel" required>
+          <label for="mNums">Números <span class="small">(ex.: 7, 15, 100-105)</span></label>
+          <input id="mNums" required>
+          <label for="mForma">Forma de pagamento</label>
+          <select id="mForma">
+            <option value="dinheiro">Dinheiro</option>
+            <option value="pix">Pix</option>
+            <option value="outro">Outro</option>
+          </select>
+          <p class="small" id="mResumo"></p>
+          <div id="mMsg" class="alert hidden"></div>
+          <button class="btn" type="submit">Lançar venda</button>
+        </form>
+      </div>
+    </section>
+
+    <!-- SORTEIO -->
+    <section id="tSorteio" class="hidden">
+      <div id="sConteudo"></div>
+    </section>
+
+    <!-- CONFIGURAÇÕES -->
+    <section id="tConfig" class="hidden">
+      <form class="card" id="fConfig">
+        <h3 style="margin-top:0">Rifa</h3>
+        <div class="form-grid">
+          <div><label for="cTitulo">Título</label><input id="cTitulo" required></div>
+          <div><label for="cPremio">Prêmio</label><input id="cPremio"></div>
+        </div>
+        <label for="cDescricao">Descrição (causa beneficiada)</label>
+        <textarea id="cDescricao" rows="3"></textarea>
+        <div class="form-grid">
+          <div><label for="cValor">Valor por número (R$)</label><input id="cValor" type="number" step="0.01" min="1" required></div>
+          <div><label for="cTotal">Quantidade de números</label><input id="cTotal" type="number" min="10" max="1000" required></div>
+          <div><label for="cPct">% mínimo para sortear</label><input id="cPct" type="number" min="1" max="100" required></div>
+          <div><label for="cData">Data prevista do sorteio</label><input id="cData" type="date"></div>
+          <div><label for="cMin">Minutos de reserva</label><input id="cMin" type="number" min="5" max="1440" required></div>
+          <div><label for="cMax">Máx. números por pedido</label><input id="cMax" type="number" min="1" max="1000" required></div>
+        </div>
+        <label style="display:flex;gap:8px;align-items:center;font-weight:600">
+          <input type="checkbox" id="cAbertas" style="width:auto"> Vendas abertas
+        </label>
+
+        <h3>Recebimento (Pix)</h3>
+        <div class="form-grid">
+          <div>
+            <label for="cChave">Chave Pix</label>
+            <input id="cChave" required placeholder="+5511999998888 / CPF / e-mail / aleatória">
+            <p class="small">Celular: com <b>+55</b> e DDD. CPF/CNPJ: só números.</p>
+          </div>
+          <div><label for="cPixNome">Nome do recebedor (como no banco)</label><input id="cPixNome" required maxlength="25"></div>
+          <div><label for="cCidade">Cidade do recebedor</label><input id="cCidade" required maxlength="15"></div>
+          <div><label for="cWa">WhatsApp para receber comprovantes</label><input id="cWa" inputmode="tel" required></div>
+        </div>
+        <div id="cMsg" class="alert hidden"></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px">
+          <button class="btn" type="submit">Salvar configurações</button>
+          <button class="btn ghost" type="button" id="btnTestePix">Gerar Pix de teste (R$ 0,01)</button>
+        </div>
+        <div id="cTeste" class="hidden" style="margin-top:12px">
+          <p class="small">Pague este Pix de 1 centavo pelo seu próprio app de banco para confirmar que a chave e o nome estão certos.</p>
+          <div class="pix-qr" id="cQr"></div>
+          <div class="copy"><input id="cCopia" readonly><button class="btn sm" type="button" id="btnCopiaTeste">Copiar</button></div>
+        </div>
+      </form>
+    </section>
+  </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="js/config.js"></script>
+<script src="js/comum.js"></script>
+<script src="js/pix.js"></script>
+<script src="js/admin.js"></script>
+</body>
+</html>
