@@ -151,7 +151,7 @@
           <div>
             <label for="cChave">Chave Pix</label>
             <input id="cChave" required placeholder="+5511999998888 / CPF / e-mail / aleatória">
-            <p class="small">Celular: com <b>+55</b> e DDD. CPF/CNPJ: só números.</p>
+            <p class="small" id="cChaveTipo">Celular, CPF, CNPJ, e-mail ou chave aleatória.</p>
           </div>
           <div><label for="cPixNome">Nome do recebedor (como no banco)</label><input id="cPixNome" required maxlength="25"></div>
           <div><label for="cCidade">Cidade do recebedor</label><input id="cCidade" required maxlength="15"></div>
@@ -170,6 +170,28 @@
       </form>
     </section>
   </main>
+</div>
+
+<!-- Modal: editar comprador -->
+<div class="modal" id="mEditar" role="dialog" aria-modal="true">
+  <div class="box">
+    <button class="close" type="button" data-fechar-editar>&times;</button>
+    <h2>Editar comprador</h2>
+    <p class="small">Pedido <b id="eCodigo"></b> · números <b id="eNums"></b></p>
+    <form id="fEditar">
+      <label for="eNome">Nome</label>
+      <input id="eNome" required minlength="3">
+      <label for="eWhats">WhatsApp (com DDD)</label>
+      <input id="eWhats" inputmode="tel" required>
+      <label for="eObs">Observação <span class="small">(opcional)</span></label>
+      <input id="eObs" placeholder="Ex.: comprado pela Polyana para a irmã">
+      <div id="eErr" class="alert err hidden"></div>
+      <div style="display:flex;gap:8px;margin-top:14px">
+        <button class="btn" type="submit">Salvar</button>
+        <button class="btn ghost" type="button" data-fechar-editar>Cancelar</button>
+      </div>
+    </form>
+  </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>

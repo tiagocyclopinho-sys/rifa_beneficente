@@ -143,6 +143,7 @@
       <td><div class="row-actions">
         ${podeConfirmar ? `<button class="btn sm" data-acao="confirmar" data-id="${p.id}">✔ Confirmar</button>` : ''}
         <a class="btn sm ghost" href="${U.wa(p.whatsapp, msgWa)}" target="_blank" rel="noopener" style="text-decoration:none">WhatsApp</a>
+        ${p.status !== 'cancelado' ? `<button class="btn sm ghost" data-acao="editar" data-id="${p.id}">✏️ Editar</button>` : ''}
         ${podeCancelar ? `<button class="btn sm ghost" data-acao="cancelar" data-id="${p.id}" style="color:var(--danger);border-color:var(--danger)">Cancelar</button>` : ''}
       </div></td>
     </tr>`;
@@ -177,6 +178,11 @@
     const p = porId(b.dataset.id);
     if (!p) return;
 
+    if (b.dataset.acao === 'editar') {
+      abrirEditar(p);
+      return;
+    }
+
     if (b.dataset.acao === 'confirmar') {
       if (!confirm(`Confirmar pagamento de ${U.brl(p.valor)} de ${p.nome}?\nPedido ${p.codigo} — números ${fmtNums(p.numeros)}\n\nConfira antes no extrato do banco.`)) return;
       b.disabled = true;
@@ -194,6 +200,40 @@
       if (error) { b.disabled = false; return alert(U.erro(error)); }
       U.toast(`Pedido ${p.codigo} cancelado; números liberados.`);
     }
+    carregar();
+  });
+
+  // Corrige nome/WhatsApp (ex.: comprou no celular de outra pessoa sem trocar os dados)
+  let editando = null;
+  function abrirEditar(p) {
+    editando = p;
+    $('eCodigo').textContent = p.codigo;
+    $('eNums').textContent = p.numeros.length > 12 ? `${p.numeros.length} números` : fmtNums(p.numeros);
+    $('eNome').value = p.nome;
+    $('eWhats').value = U.fone(p.whatsapp);
+    $('eObs').value = p.observacao || '';
+    $('eErr').classList.add('hidden');
+    $('mEditar').classList.add('open');
+    $('eNome').focus();
+  }
+  function fecharEditar() { $('mEditar').classList.remove('open'); editando = null; }
+  document.querySelectorAll('[data-fechar-editar]').forEach(b => b.addEventListener('click', fecharEditar));
+  $('mEditar').addEventListener('click', e => { if (e.target === $('mEditar')) fecharEditar(); });
+
+  $('fEditar').addEventListener('submit', async e => {
+    e.preventDefault();
+    const nome = $('eNome').value.trim();
+    const whats = U.soDigitos($('eWhats').value).replace(/^55(?=\d{10,11}$)/, '');
+    const erro = msg => { $('eErr').textContent = msg; $('eErr').classList.remove('hidden'); };
+    if (nome.length < 3) return erro('Informe o nome completo.');
+    if (whats.length < 10 || whats.length > 11) return erro('WhatsApp inválido. Use DDD + número.');
+
+    const { error } = await sb.from('rifa_pedidos')
+      .update({ nome, whatsapp: whats, observacao: $('eObs').value.trim() || null, atualizado_por: usuario.email })
+      .eq('id', editando.id);
+    if (error) return erro(U.erro(error));
+    U.toast(`Pedido ${editando.codigo} atualizado.`);
+    fecharEditar();
     carregar();
   });
 
@@ -348,6 +388,7 @@
   function preencherConfig() {
     Object.entries(CAMPOS).forEach(([id, col]) => { $(id).value = cfg[col] ?? ''; });
     $('cAbertas').checked = cfg.vendas_abertas;
+    mostrarTipoChave();
     const temVenda = numeros.some(n => n.status !== 'livre');
     $('cTotal').disabled = temVenda;
     $('cTotal').title = temVenda ? 'Não é possível mudar a quantidade depois que as vendas começaram.' : '';
@@ -357,6 +398,15 @@
 
   $('fConfig').addEventListener('input', () => { $('fConfig').dataset.sujo = '1'; });
 
+  function mostrarTipoChave() {
+    const n = Pix.normalizarChave($('cChave').value);
+    $('cChaveTipo').innerHTML = n.chave
+      ? `Será usada como <b>${U.esc(n.tipo)}</b>: <code>${U.esc(n.chave)}</code>`
+      : 'Celular, CPF, CNPJ, e-mail ou chave aleatória.';
+    $('cChaveTipo').style.color = n.tipo === 'Formato não reconhecido' ? 'var(--danger)' : '';
+  }
+  $('cChave').addEventListener('input', mostrarTipoChave);
+
   $('fConfig').addEventListener('submit', async e => {
     e.preventDefault();
     const upd = {};
@@ -364,6 +414,7 @@
     ['valor_cota', 'total_numeros', 'percentual_minimo', 'minutos_reserva', 'max_por_pedido'].forEach(k => { if (k in upd) upd[k] = Number(upd[k]); });
     ['titulo', 'premio', 'descricao', 'pix_chave', 'pix_nome', 'pix_cidade'].forEach(k => { upd[k] = upd[k] ?? ''; });
     upd.whatsapp_admin = U.soDigitos(upd.whatsapp_admin);
+    upd.pix_chave = Pix.normalizarChave(upd.pix_chave).chave;
     upd.vendas_abertas = $('cAbertas').checked;
 
     const msg = $('cMsg');

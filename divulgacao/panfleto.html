@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Panfleto da Rifa</title>
+<script>
+  // ===== EDITE AQUI =====
+  const PANFLETO = {
+    premio1: '1 caixa de Picanha PUL Selection',
+    premio2: '+ 3 caixas de Amstel lata 269 ml',
+    valor:   'R$ 20',
+    numeros: '500',
+    data:    '30/12/2026',
+    link:    'rifabeneficente-gamma.vercel.app'
+  };
+</script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 1080px; height: 1350px; }
+  @page { size: 1080px 1350px; margin: 0; }
+  body {
+    font-family: "Segoe UI", system-ui, sans-serif;
+    background: #f6f7f4; color: #1f2a24; overflow: hidden; position: relative;
+    -webkit-print-color-adjust: exact; print-color-adjust: exact;
+  }
+  .topo {
+    background: linear-gradient(135deg, #0b5e47 0%, #13906d 100%);
+    color: #fff; text-align: center; padding: 40px 70px 120px;
+  }
+  .topo .tag {
+    display: inline-block; border: 3px solid rgba(255,255,255,.5); border-radius: 999px;
+    padding: 6px 26px; font-size: 26px; font-weight: 700; letter-spacing: .12em;
+  }
+  .topo h1 { font-size: 88px; line-height: 1; font-weight: 900; margin-top: 18px; }
+  .topo p { font-size: 34px; line-height: 1.25; margin-top: 16px; opacity: .96; }
+
+  .premio {
+    margin: -90px 60px 0; position: relative;
+    background: #000; color: #fff; border-radius: 32px; overflow: hidden;
+    border: 5px solid #e8a33d; box-shadow: 0 14px 40px rgba(0,0,0,.25);
+  }
+  .premio .fotos { display: flex; align-items: center; justify-content: center; }
+  .premio .foto { width: 420px; height: 290px; flex: none; position: relative; overflow: hidden; }
+  .premio .foto img { position: absolute; }
+  .premio .carne img { width: 600px; left: -95px; top: -58px; }
+  .premio .cerveja img { width: 540px; left: -40px; top: -128px; }
+  .premio .mais { font-size: 64px; font-weight: 800; color: #f2b84b; width: 60px; text-align: center; }
+  .premio .txt { text-align: center; padding: 6px 30px 26px; }
+  .premio small { font-size: 26px; font-weight: 700; color: #f2b84b; letter-spacing: .1em; }
+  .premio b { display: block; font-size: 46px; line-height: 1.1; margin-top: 6px; }
+  .premio span { display: block; font-size: 34px; line-height: 1.2; margin-top: 8px; color: #ffd27a; font-weight: 600; }
+
+  .infos { display: flex; gap: 20px; margin: 28px 60px 0; }
+  .info {
+    flex: 1; background: #fff; border-radius: 24px; padding: 20px 12px; text-align: center;
+    box-shadow: 0 4px 16px rgba(0,0,0,.06);
+  }
+  .info b { display: block; font-size: 48px; color: #0b5e47; line-height: 1.1; }
+  .info span { font-size: 23px; color: #66736b; }
+
+  .baixo { display: flex; gap: 32px; margin: 40px 60px 0; align-items: center; }
+  .passos { flex: 1; }
+  .passos h2 { font-size: 34px; margin-bottom: 16px; }
+  .passo { display: flex; align-items: center; gap: 16px; font-size: 27px; margin-bottom: 14px; }
+  .passo i {
+    flex: none; width: 50px; height: 50px; border-radius: 50%; background: #0b5e47; color: #fff;
+    font-style: normal; font-weight: 800; font-size: 26px; display: grid; place-items: center;
+  }
+  .qr { flex: none; width: 320px; text-align: center; }
+  .qr .box { background: #fff; border-radius: 26px; padding: 16px; box-shadow: 0 6px 24px rgba(0,0,0,.1); }
+  .qr img { width: 100%; display: block; }
+  .qr p { font-size: 19px; font-weight: 700; color: #0b5e47; margin-top: 10px; white-space: nowrap; }
+
+  .rodape {
+    position: absolute; left: 0; right: 0; bottom: 0; background: #0b5e47; color: #fff;
+    text-align: center; padding: 22px 40px; font-size: 25px;
+  }
+  .rodape b { color: #ffd27a; }
+</style>
+</head>
+<body>
+  <div class="topo">
+    <div class="tag">AÇÃO SOLIDÁRIA</div>
+    <h1>RIFA BENEFICENTE</h1>
+  </div>
+
+  <div class="premio">
+    <div class="fotos">
+      <div class="foto carne"><img src="premio-picanha.jpg" alt="Picanha PUL Selection"></div>
+      <div class="mais">+</div>
+      <div class="foto cerveja"><img src="premio-amstel.webp" alt="Amstel lata 269 ml"></div>
+    </div>
+    <div class="txt">
+      <small>🏆 PRÊMIO</small>
+      <b id="premio1"></b>
+      <span id="premio2"></span>
+    </div>
+  </div>
+
+  <div class="infos">
+    <div class="info"><b id="valor"></b><span>por número</span></div>
+    <div class="info"><b id="numeros"></b><span>números</span></div>
+    <div class="info"><b>🍀</b><span>Loteria Federal</span></div>
+  </div>
+
+  <div class="baixo">
+    <div class="passos">
+      <h2>Como participar</h2>
+      <div class="passo"><i>1</i>Aponte a câmera para o QR Code</div>
+      <div class="passo"><i>2</i>Escolha seus números da sorte</div>
+      <div class="passo"><i>3</i>Pague na hora pelo Pix</div>
+      <div class="passo"><i>4</i>Confirmação pelo WhatsApp</div>
+    </div>
+    <div class="qr">
+      <div class="box"><img src="qrcode-rifa.svg" alt="QR Code da rifa"></div>
+      <p id="link"></p>
+    </div>
+  </div>
+
+  <div class="rodape">
+    Sorteio: <b id="data"></b> · pela Loteria Federal, ao vender 80% dos números
+  </div>
+
+<script>
+  for (const [k, v] of Object.entries(PANFLETO)) {
+    const el = document.getElementById(k);
+    if (el) el.textContent = v;
+  }
+</script>
+</body>
+</html>
