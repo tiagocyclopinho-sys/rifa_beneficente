@@ -7,6 +7,7 @@
   let pedidos = [];
   let numeros = [];   // [{numero, status, pedido_id}]
   let usuario = null;
+  let saques = [];    // [{id, data, pessoa, valor, observacao}] ou null se a migração não foi aplicada
 
   // ---------------------------------------------------------------
   // Login
@@ -47,19 +48,23 @@
   // ---------------------------------------------------------------
   async function carregar() {
     await sb.rpc('rifa_mapa');   // efeito colateral: libera reservas vencidas
-    const [c, p, n] = await Promise.all([
+    const [c, p, n, s] = await Promise.all([
       sb.from('rifa_config').select('*').eq('id', 1).single(),
       sb.from('rifa_pedidos').select('*').order('criado_em', { ascending: false }),
-      sb.from('rifa_numeros').select('numero,status,pedido_id').order('numero')
+      sb.from('rifa_numeros').select('numero,status,pedido_id').order('numero'),
+      sb.from('rifa_saques').select('*').order('data', { ascending: false })
     ]);
     const err = c.error || p.error || n.error;
     if (err) { U.toast('Erro ao carregar: ' + U.erro(err), 5000); return; }
     cfg = c.data; pedidos = p.data; numeros = n.data;
+    // tabela de saques só existe depois da migration_01
+    saques = s.error ? null : s.data;
     $('aTitulo').textContent = cfg.titulo;
     $('aAtualizado').textContent = `${usuario.email} · atualizado às ${new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`;
     pintarGeral();
     pintarPedidos();
     pintarSorteio();
+    pintarFinanceiro();
     if (!$('fConfig').dataset.sujo) preencherConfig();
   }
 
@@ -283,6 +288,87 @@
   });
 
   // ---------------------------------------------------------------
+  // Financeiro: saques e divisão em partes iguais
+  // ---------------------------------------------------------------
+  function pintarFinanceiro() {
+    const aviso = $('fAviso');
+    if (saques === null) {
+      aviso.classList.remove('hidden');
+      aviso.innerHTML = 'Para usar o controle de saques, rode o arquivo <b>database/migration_01_saques.sql</b> no SQL Editor do Supabase.';
+      $('fKpis').innerHTML = $('fSocios').innerHTML = $('sqLinhas').innerHTML = '';
+      $('fSaque').classList.add('hidden');
+      return;
+    }
+    aviso.classList.add('hidden');
+    $('fSaque').classList.remove('hidden');
+
+    const socios = cfg.socios && cfg.socios.length ? cfg.socios : ['Luciano', 'Tiago'];
+    const arrecadado = pedidos.filter(p => p.status === 'pago').reduce((s, p) => s + Number(p.valor), 0);
+    const sacadoTotal = saques.reduce((s, x) => s + Number(x.valor), 0);
+    const parte = arrecadado / socios.length;
+
+    $('fKpis').innerHTML = [
+      ['Arrecadado (confirmado)', U.brl(arrecadado), `${socios.length} partes de ${U.brl(parte)}`],
+      ['Total já sacado', U.brl(sacadoTotal), `${saques.length} saque(s)`],
+      ['Deve estar na conta', U.brl(arrecadado - sacadoTotal), 'arrecadado − saques']
+    ].map(([a, b, c]) => `<div class="kpi"><span>${a}</span><b>${b}</b><small>${c}</small></div>`).join('');
+
+    $('fSocios').innerHTML = socios.map(nome => {
+      const sacou = saques.filter(x => x.pessoa === nome).reduce((s, x) => s + Number(x.valor), 0);
+      const saldo = parte - sacou;
+      const cor = saldo < 0 ? 'var(--danger)' : 'var(--primary)';
+      const txt = saldo < 0 ? `sacou ${U.brl(-saldo)} a mais que a parte` : 'ainda pode sacar';
+      return `<div class="kpi" style="border-top:4px solid ${cor}">
+        <span>${U.esc(nome)} · parte ${U.brl(parte)}</span>
+        <b style="color:${cor}">${U.brl(Math.abs(saldo))}</b>
+        <small>${txt} · já sacou ${U.brl(sacou)}</small></div>`;
+    }).join('');
+
+    const sel = $('sqPessoa');
+    if (sel.options.length !== socios.length) {
+      sel.innerHTML = socios.map(n => `<option>${U.esc(n)}</option>`).join('');
+    }
+    if (!$('sqData').value) $('sqData').value = new Date().toLocaleDateString('sv-SE');
+
+    $('sqLinhas').innerHTML = saques.map(x => `<tr>
+      <td>${U.data(x.data, false)}</td>
+      <td>${U.esc(x.pessoa)}</td>
+      <td>${U.brl(x.valor)}</td>
+      <td>${U.esc(x.observacao || '')}</td>
+      <td><button class="btn sm ghost" data-excluir-saque="${x.id}" style="color:var(--danger);border-color:var(--danger)">Excluir</button></td>
+    </tr>`).join('');
+    $('sqVazio').hidden = saques.length > 0;
+  }
+
+  $('fSaque').addEventListener('submit', async e => {
+    e.preventDefault();
+    const msg = $('sqMsg');
+    const valor = Number($('sqValor').value);
+    const pessoa = $('sqPessoa').value;
+    msg.classList.remove('hidden', 'err', 'ok');
+    if (!(valor > 0)) { msg.classList.add('err'); msg.textContent = 'Informe o valor.'; return; }
+    const { error } = await sb.from('rifa_saques').insert({
+      pessoa, valor, data: $('sqData').value, observacao: $('sqObs').value.trim() || null, criado_por: usuario.email
+    });
+    if (error) { msg.classList.add('err'); msg.textContent = U.erro(error); return; }
+    msg.classList.add('ok');
+    msg.textContent = `Saque de ${U.brl(valor)} de ${pessoa} registrado.`;
+    $('sqValor').value = ''; $('sqObs').value = '';
+    carregar();
+  });
+
+  document.addEventListener('click', async e => {
+    const b = e.target.closest('[data-excluir-saque]');
+    if (!b) return;
+    const x = saques.find(s => s.id === b.dataset.excluirSaque);
+    if (!x || !confirm(`Excluir o saque de ${U.brl(x.valor)} de ${x.pessoa} (${U.data(x.data, false)})?`)) return;
+    const { error } = await sb.from('rifa_saques').delete().eq('id', x.id);
+    if (error) return alert(U.erro(error));
+    U.toast('Saque excluído.');
+    carregar();
+  });
+
+  // ---------------------------------------------------------------
   // Sorteio
   // ---------------------------------------------------------------
   let estadoSorteio = '';
@@ -441,7 +527,7 @@
   // ---------------------------------------------------------------
   document.querySelectorAll('.tabs button').forEach(b => b.addEventListener('click', () => {
     document.querySelectorAll('.tabs button').forEach(x => x.classList.toggle('on', x === b));
-    ['tGeral', 'tPedidos', 'tManual', 'tSorteio', 'tConfig'].forEach(t => $(t).classList.toggle('hidden', t !== b.dataset.tab));
+    ['tGeral', 'tPedidos', 'tManual', 'tFinanceiro', 'tSorteio', 'tConfig'].forEach(t => $(t).classList.toggle('hidden', t !== b.dataset.tab));
   }));
 
   iniciar();

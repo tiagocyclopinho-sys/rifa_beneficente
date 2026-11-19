@@ -84,6 +84,12 @@
     montarRegulamento(meta);
   }
 
+  function duracao(min) {
+    if (min < 60) return `${min} minutos`;
+    const h = Math.floor(min / 60), m = min % 60;
+    return `${h} hora${h > 1 ? 's' : ''}${m ? ` e ${m} minutos` : ''}`;
+  }
+
   function montarRegulamento(meta) {
     const t = cfg.total_numeros;
     const regra500 = t === 500
@@ -91,7 +97,7 @@
       : `Se o valor passar de ${t}, subtrai-se ${t} até ficar dentro da faixa (000 vale 1000).`;
     $('regulamento').innerHTML = [
       `Serão ${t} números, de ${U.pad(1, t)} a ${U.pad(t, t)}, a ${U.brl(cfg.valor_cota)} cada. Cada pessoa pode comprar quantos quiser.`,
-      `Ao escolher, os números ficam <b>reservados por ${cfg.minutos_reserva} minutos</b> para pagamento via Pix. Sem pagamento, voltam a ficar livres.`,
+      `Ao escolher, os números ficam <b>reservados por ${duracao(cfg.minutos_reserva)}</b> para pagamento via Pix. Sem pagamento, voltam a ficar livres.`,
       `O número só passa a valer depois que o pagamento for conferido (aparece como <b>vendido</b>).`,
       `O sorteio só acontece após a venda de pelo menos <b>${meta} números (${cfg.percentual_minimo}%)</b>${cfg.data_sorteio ? `, na extração da Loteria Federal prevista para ${U.data(cfg.data_sorteio, false)} ou na primeira extração após atingir a meta` : ''}.`,
       `<b>Como o ganhador é definido:</b> usam-se os 3 últimos dígitos do 1º prêmio da Loteria Federal. ${regra500}`,
@@ -256,8 +262,11 @@
     const fim = new Date(expira).getTime();
     const tick = () => {
       const s = Math.max(0, Math.round((fim - Date.now()) / 1000));
+      const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60);
       $('pixTimer').textContent = s > 0
-        ? `Reserva válida por ${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`
+        ? (h > 0
+            ? `Reserva válida por ${h}h${String(m).padStart(2, '0')}min`
+            : `Reserva válida por ${m}:${String(s % 60).padStart(2, '0')}`)
         : 'Tempo de reserva esgotado. Se já pagou, envie o comprovante mesmo assim.';
       if (s === 0) clearInterval(timerH);
     };
