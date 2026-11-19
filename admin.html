@@ -46,6 +46,7 @@
       <button data-tab="tGeral" class="on">Visão geral</button>
       <button data-tab="tPedidos">Pedidos <span class="badge informado" id="badgeConferir" hidden></span></button>
       <button data-tab="tManual">Venda manual</button>
+      <button data-tab="tFinanceiro">Financeiro</button>
       <button data-tab="tSorteio">Sorteio</button>
       <button data-tab="tConfig">Configurações</button>
     </nav>
@@ -119,6 +120,37 @@
       </div>
     </section>
 
+    <!-- FINANCEIRO -->
+    <section id="tFinanceiro" class="hidden">
+      <div id="fAviso" class="alert warn hidden"></div>
+      <div class="kpis" id="fKpis"></div>
+      <div class="kpis" id="fSocios"></div>
+
+      <div class="card" style="max-width:560px">
+        <h3 style="margin-top:0">Registrar saque</h3>
+        <p class="small">Anote toda retirada: saque da conta ou dinheiro de venda recebido em mãos.</p>
+        <form id="fSaque">
+          <div class="form-grid">
+            <div><label for="sqPessoa">Quem sacou</label><select id="sqPessoa" required></select></div>
+            <div><label for="sqValor">Valor (R$)</label><input id="sqValor" type="number" step="0.01" min="0.01" required inputmode="decimal"></div>
+            <div><label for="sqData">Data</label><input id="sqData" type="date" required></div>
+          </div>
+          <label for="sqObs">Observação <span class="small">(opcional)</span></label>
+          <input id="sqObs" placeholder="Ex.: pagamento da oficina / dinheiro das vendas na portaria">
+          <div id="sqMsg" class="alert hidden"></div>
+          <button class="btn" type="submit" style="margin-top:12px">Registrar saque</button>
+        </form>
+      </div>
+
+      <div class="card table-wrap" style="padding:6px">
+        <table>
+          <thead><tr><th>Data</th><th>Quem</th><th>Valor</th><th>Observação</th><th></th></tr></thead>
+          <tbody id="sqLinhas"></tbody>
+        </table>
+        <p class="small" id="sqVazio" style="padding:12px" hidden>Nenhum saque registrado ainda.</p>
+      </div>
+    </section>
+
     <!-- SORTEIO -->
     <section id="tSorteio" class="hidden">
       <div id="sConteudo"></div>
@@ -139,7 +171,7 @@
           <div><label for="cTotal">Quantidade de números</label><input id="cTotal" type="number" min="10" max="1000" required></div>
           <div><label for="cPct">% mínimo para sortear</label><input id="cPct" type="number" min="1" max="100" required></div>
           <div><label for="cData">Data prevista do sorteio</label><input id="cData" type="date"></div>
-          <div><label for="cMin">Minutos de reserva</label><input id="cMin" type="number" min="5" max="1440" required></div>
+          <div><label for="cMin">Minutos de reserva <span class="small">(480 = 8 horas)</span></label><input id="cMin" type="number" min="5" max="1440" required></div>
           <div><label for="cMax">Máx. números por pedido</label><input id="cMax" type="number" min="1" max="1000" required></div>
         </div>
         <label style="display:flex;gap:8px;align-items:center;font-weight:600">
